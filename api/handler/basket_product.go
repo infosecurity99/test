@@ -2,11 +2,13 @@ package handler
 
 import (
 	"context"
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"net/http"
 	"strconv"
 	"test/api/models"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // CreateBasketProduct godoc
@@ -28,8 +30,9 @@ func (h Handler) CreateBasketProduct(c *gin.Context) {
 		handleResponse(c, "error is while reading body", http.StatusBadRequest, err.Error())
 		return
 	}
-
-	createdBasketProduct, err := h.services.BasketProduct().Create(context.Background(), basketProduct)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	createdBasketProduct, err := h.services.BasketProduct().Create(ctx, basketProduct)
 	if err != nil {
 		handleResponse(c, "error is while creating basket product", http.StatusInternalServerError, err)
 		return
@@ -52,8 +55,9 @@ func (h Handler) CreateBasketProduct(c *gin.Context) {
 // @Failure      500  {object}  models.Response
 func (h Handler) GetBasketProduct(c *gin.Context) {
 	uid := c.Param("id")
-
-	resp, err := h.services.BasketProduct().Get(context.Background(), models.PrimaryKey{ID: uid})
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	resp, err := h.services.BasketProduct().Get(ctx, models.PrimaryKey{ID: uid})
 	if err != nil {
 		handleResponse(c, "error is while getting by id", http.StatusInternalServerError, err.Error())
 		return
@@ -111,8 +115,9 @@ func (h Handler) GetBasketProductList(c *gin.Context) {
 
 		basketID = bUID.String()
 	}
-
-	resp, err := h.services.BasketProduct().GetList(context.Background(), models.GetListRequest{
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	resp, err := h.services.BasketProduct().GetList(ctx, models.GetListRequest{
 		Page:     page,
 		Limit:    limit,
 		Search:   search,
@@ -145,8 +150,9 @@ func (h Handler) UpdateBasketProduct(c *gin.Context) {
 	}
 
 	basketProduct.ID = uid
-
-	resp, err := h.services.BasketProduct().Update(context.Background(), basketProduct)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	resp, err := h.services.BasketProduct().Update(ctx, basketProduct)
 	if err != nil {
 		handleResponse(c, "error is while updating basket", http.StatusInternalServerError, err.Error())
 		return
@@ -169,8 +175,9 @@ func (h Handler) UpdateBasketProduct(c *gin.Context) {
 // @Failure      500  {object}  models.Response
 func (h Handler) DeleteBasketProduct(c *gin.Context) {
 	uid := c.Param("id")
-
-	if err := h.services.BasketProduct().Delete(context.Background(), models.PrimaryKey{ID: uid}); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	if err := h.services.BasketProduct().Delete(ctx, models.PrimaryKey{ID: uid}); err != nil {
 		handleResponse(c, "error is while deleting", http.StatusInternalServerError, err.Error())
 		return
 	}

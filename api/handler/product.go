@@ -2,10 +2,12 @@ package handler
 
 import (
 	"context"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
 	"test/api/models"
+	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 // CreateProduct godoc
@@ -27,8 +29,9 @@ func (h Handler) CreateProduct(c *gin.Context) {
 		handleResponse(c, "error is while reading body", http.StatusBadRequest, err.Error())
 		return
 	}
-
-	createdProduct, err := h.services.Product().Create(context.Background(), product)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	createdProduct, err := h.services.Product().Create(ctx, product)
 	if err != nil {
 		handleResponse(c, "error is while creating product", http.StatusInternalServerError, err.Error())
 		return
@@ -97,8 +100,9 @@ func (h Handler) GetProductList(c *gin.Context) {
 	}
 
 	search = c.Query("search")
-
-	products, err := h.services.Product().GetList(context.Background(), models.GetListRequest{
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	products, err := h.services.Product().GetList(ctx, models.GetListRequest{
 		Page:   page,
 		Limit:  limit,
 		Search: search,
@@ -136,8 +140,9 @@ func (h Handler) UpdateProduct(c *gin.Context) {
 	}
 
 	product.ID = uid
-
-	updatedProduct, err := h.services.Product().Update(context.Background(), product)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	updatedProduct, err := h.services.Product().Update(ctx, product)
 	if err != nil {
 		handleResponse(c, "error is while updating product", http.StatusInternalServerError, err.Error())
 		return
@@ -196,7 +201,9 @@ func (h Handler) StartSellNew(c *gin.Context) {
 	}
 
 	// dealer
-	if err = h.services.Dealer().Delivery(context.Background(), productSell); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	if err = h.services.Dealer().Delivery(ctx, productSell); err != nil {
 		handleResponse(c, "error is while delivery products", http.StatusInternalServerError, err.Error())
 		return
 	}

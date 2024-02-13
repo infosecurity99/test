@@ -2,10 +2,12 @@ package handler
 
 import (
 	"context"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
 	"test/api/models"
+	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 // CreateCategory godoc
@@ -27,8 +29,9 @@ func (h Handler) CreateCategory(c *gin.Context) {
 		handleResponse(c, "error is while reading body from client", http.StatusBadRequest, err.Error())
 		return
 	}
-
-	resp, err := h.services.Category().Create(context.Background(), category)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	resp, err := h.services.Category().Create(ctx, category)
 	if err != nil {
 		handleResponse(c, "error is while creating category", http.StatusInternalServerError, err.Error())
 		return
@@ -51,8 +54,9 @@ func (h Handler) CreateCategory(c *gin.Context) {
 // @Failure      500  {object}  models.Response
 func (h Handler) GetCategory(c *gin.Context) {
 	uid := c.Param("id")
-
-	category, err := h.services.Category().Get(context.Background(), models.PrimaryKey{ID: uid})
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	category, err := h.services.Category().Get(ctx, models.PrimaryKey{ID: uid})
 	if err != nil {
 		handleResponse(c, "error is while getting by id", http.StatusInternalServerError, err.Error())
 		return
@@ -97,8 +101,9 @@ func (h Handler) GetCategoryList(c *gin.Context) {
 	}
 
 	search = c.Query("search")
-
-	categories, err := h.services.Category().GetList(context.Background(), models.GetListRequest{
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	categories, err := h.services.Category().GetList(ctx, models.GetListRequest{
 		Page:   page,
 		Limit:  limit,
 		Search: search,
@@ -135,8 +140,9 @@ func (h Handler) UpdateCategory(c *gin.Context) {
 	}
 
 	category.ID = uid
-
-	updatedCategory, err := h.services.Category().Update(context.Background(), category)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	updatedCategory, err := h.services.Category().Update(ctx, category)
 	if err != nil {
 		handleResponse(c, "error is while getting by id", http.StatusInternalServerError, err.Error())
 		return
@@ -159,8 +165,9 @@ func (h Handler) UpdateCategory(c *gin.Context) {
 // @Failure      500  {object}  models.Response
 func (h Handler) DeleteCategory(c *gin.Context) {
 	uid := c.Param("id")
-
-	if err := h.services.Category().Delete(context.Background(), models.PrimaryKey{ID: uid}); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	if err := h.services.Category().Delete(ctx, models.PrimaryKey{ID: uid}); err != nil {
 		handleResponse(c, "error is while delete", http.StatusInternalServerError, err.Error())
 		return
 	}

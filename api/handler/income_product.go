@@ -3,10 +3,12 @@ package handler
 import (
 	"context"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
 	"test/api/models"
+	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 // CreateIncomeProducts godoc
@@ -28,8 +30,9 @@ func (h Handler) CreateIncomeProducts(c *gin.Context) {
 		handleResponse(c, "error while binding json", http.StatusBadRequest, err.Error())
 		return
 	}
-
-	err := h.services.IncomeProduct().CreateMultiple(context.Background(), incomeProducts)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	err := h.services.IncomeProduct().CreateMultiple(ctx, incomeProducts)
 	if err != nil {
 		handleResponse(c, "error while creating incomeProducts", http.StatusInternalServerError, err.Error())
 		return
@@ -74,7 +77,10 @@ func (h Handler) GetIncomeProductsList(c *gin.Context) {
 	}
 
 	search = c.Query("search")
-	resp, err := h.services.IncomeProduct().GetList(context.Background(), models.GetListRequest{
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	resp, err := h.services.IncomeProduct().GetList(ctx, models.GetListRequest{
 		Page:   page,
 		Limit:  limit,
 		Search: search,
@@ -105,8 +111,9 @@ func (h Handler) UpdateIncomeProducts(c *gin.Context) {
 		handleResponse(c, "error is while reading body", http.StatusBadRequest, err.Error())
 		return
 	}
-
-	if err := h.services.IncomeProduct().UpdateMultiple(context.Background(), body); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	if err := h.services.IncomeProduct().UpdateMultiple(ctx, body); err != nil {
 		handleResponse(c, "error is while updating multiple income products", http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -131,7 +138,10 @@ func (h Handler) DeleteIncomeProducts(c *gin.Context) {
 	if err := c.ShouldBindJSON(&body); err != nil {
 		handleResponse(c, "error is while reading body", http.StatusBadRequest, err.Error())
 	}
-	if err := h.services.IncomeProduct().DeleteMultiple(context.Background(), body); err != nil {
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	if err := h.services.IncomeProduct().DeleteMultiple(ctx, body); err != nil {
 		handleResponse(c, "error is deleting income product", http.StatusInternalServerError, err.Error())
 		return
 	}

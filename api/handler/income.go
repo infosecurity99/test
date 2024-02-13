@@ -2,10 +2,12 @@ package handler
 
 import (
 	"context"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
 	"test/api/models"
+	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 // CreateIncome godoc
@@ -20,7 +22,9 @@ import (
 // @Failure      404  {object}  models.Response
 // @Failure      500  {object}  models.Response
 func (h Handler) CreateIncome(c *gin.Context) {
-	resp, err := h.services.Income().Create(context.Background())
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	resp, err := h.services.Income().Create(ctx)
 	if err != nil {
 		handleResponse(c, "error while creating income", http.StatusInternalServerError, err.Error())
 		return
@@ -43,7 +47,9 @@ func (h Handler) CreateIncome(c *gin.Context) {
 // @Failure      500  {object}  models.Response
 func (h Handler) GetIncome(c *gin.Context) {
 	uid := c.Param("id")
-	resp, err := h.services.Income().Get(context.Background(), models.PrimaryKey{ID: uid})
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	resp, err := h.services.Income().Get(ctx, models.PrimaryKey{ID: uid})
 	if err != nil {
 		handleResponse(c, "error is while getting income by id", http.StatusInternalServerError, err.Error())
 		return
@@ -88,7 +94,9 @@ func (h Handler) GetIncomeList(c *gin.Context) {
 	}
 
 	search = c.Query("search")
-	resp, err := h.services.Income().GetList(context.Background(), models.GetListRequest{
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	resp, err := h.services.Income().GetList(ctx, models.GetListRequest{
 		Page:   page,
 		Limit:  limit,
 		Search: search,
@@ -114,8 +122,9 @@ func (h Handler) GetIncomeList(c *gin.Context) {
 // @Failure      500  {object}  models.Response
 func (h Handler) DeleteIncome(c *gin.Context) {
 	uid := c.Param("id")
-
-	if err := h.services.Income().Delete(context.Background(), models.PrimaryKey{ID: uid}); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	if err := h.services.Income().Delete(ctx, models.PrimaryKey{ID: uid}); err != nil {
 		handleResponse(c, "error is while deleting basket", http.StatusInternalServerError, err)
 		return
 	}
