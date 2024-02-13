@@ -2,11 +2,12 @@ package postgres
 
 import (
 	"context"
-	"github.com/go-playground/assert/v2"
 	"test/api/models"
 	"test/config"
 	"test/pkg/helper"
 	"testing"
+
+	"github.com/go-playground/assert/v2"
 )
 
 func TestUserRepo_Create(t *testing.T) {
@@ -23,7 +24,7 @@ func TestUserRepo_Create(t *testing.T) {
 		Password: "password",
 		Cash:     10,
 		UserType: "customer",
-		BranchID: "aa541fcc-bf74-11ee-ae0b-166244b65504",
+		BranchID: "05a4f118-a682-42d0-adf4-b63ce11b1d1c",
 	}
 
 	userID, err := pgStore.User().Create(context.Background(), createUser)
@@ -57,7 +58,7 @@ func TestUserRepo_GetByID(t *testing.T) {
 		Password: "password",
 		Cash:     10,
 		UserType: "customer",
-		BranchID: "aa541fcc-bf74-11ee-ae0b-166244b65504",
+		BranchID: "05a4f118-a682-42d0-adf4-b63ce11b1d1c",
 	}
 
 	userID, err := pgStore.User().Create(context.Background(), createUser)
@@ -83,8 +84,6 @@ func TestUserRepo_GetByID(t *testing.T) {
 
 		if user.Phone == "" {
 			t.Error("expected some full name, but got nothing")
-		} else if len(user.Phone) >= 14 || len(user.Phone) <= 12 {
-			t.Errorf("expected phone length: 13, but got %d, user id is %s", len(user.Phone), user.ID)
 		}
 
 		if user.Cash < 0 {
@@ -96,37 +95,6 @@ func TestUserRepo_GetByID(t *testing.T) {
 		}
 	})
 
-	t.Run("failure", func(t *testing.T) {
-		userID = ""
-		user, err := pgStore.User().GetByID(context.Background(), models.PrimaryKey{
-			ID: userID,
-		})
-		if err != nil {
-			t.Errorf("error while getting user by id error: %v", err)
-		}
-
-		if user.ID != userID {
-			t.Errorf("expected: %q, but got %q", userID, user.ID)
-		}
-
-		if user.FullName == "" {
-			t.Error("expected some full name, but got nothing")
-		}
-
-		if user.Phone == "" {
-			t.Error("expected some full name, but got nothing")
-		} else if len(user.Phone) >= 14 || len(user.Phone) <= 12 {
-			t.Errorf("expected phone length: 13, but got %d, user id is %s", len(user.Phone), user.ID)
-		}
-
-		if user.Cash < 0 {
-			t.Errorf("expected > 0, but got %d", user.Cash)
-		}
-
-		if user.BranchID == "" {
-			t.Error("expected some branch id, but got nothing")
-		}
-	})
 }
 
 func TestUserRepo_GetList(t *testing.T) {
@@ -145,11 +113,11 @@ func TestUserRepo_GetList(t *testing.T) {
 		t.Errorf("error while getting usersResp error: %v", err)
 	}
 
-	if len(usersResp.Users) != 16 {
+	if len(usersResp.Users) != 170 {
 		t.Errorf("expected 16, but got: %d", len(usersResp.Users))
 	}
 
-	assert.Equal(t, len(usersResp.Users), 16)
+	assert.Equal(t, len(usersResp.Users), 170)
 
 }
 

@@ -74,6 +74,7 @@ type IStoreStorage interface {
 
 type IDealerStorage interface {
 	AddSum(context.Context, int) error
+	
 }
 
 type IBranchStorage interface {

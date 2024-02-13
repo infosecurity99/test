@@ -7,25 +7,31 @@ import (
 	"time"
 )
 
-func TestStoreAddProfit(t *testing.T) {
+func TestStoreAddProfitAndWithdrawal(t *testing.T) {
+    cfg := config.Load()
+    pgStore, err := New(context.Background(), cfg)
+    if err != nil {
+        t.Fatalf("error while connection to db: %v", err)
+    }
 
-	cfg := config.Load()
-	pgStore, err := New(context.Background(), cfg)
-	if err != nil {
-		t.Fatalf("error while connection to db: %v", err)
-	}
+    ctx := context.Background()
+    profit := float32(400.0)
+    branchID := "28288bf9-3ed1-4f4f-92f4-7ab3d5f2959a"
+    ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+    defer cancel()
 
-	ctx := context.Background()
-	profit := float32(100.0)
-	branchID := "3f396f70-60ea-4cb1-8eb7-30fe0fc6664a"
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
-	defer cancel()
-	err = pgStore.Store().AddProfit(ctx, profit, branchID)
+    // Add profit to the store
+    if err := pgStore.Store().AddProfit(ctx, profit, branchID); err != nil {
+        t.Fatalf("AddProfit returned an unexpected error: %v", err)
+    }
 
-	if err != nil {
-		t.Fatalf("AddProfit returned an unexpected error: %v", err)
-	}
+    // Withdraw the profit from the store
+    if err := pgStore.Store().WithdrawalDeliveredSum(ctx, profit, branchID); err != nil {
+        t.Fatalf("WithdrawalDeliveredSum returned an unexpected error: %v", err)
+    }
+
 }
+
 
 func TestStoreGetStoreBudget(t *testing.T) {
 
