@@ -2,10 +2,12 @@ package handler
 
 import (
 	"context"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
 	"test/api/models"
+	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 // CreateBasket godoc
@@ -27,8 +29,9 @@ func (h Handler) CreateBasket(c *gin.Context) {
 		handleResponse(c, "error is while decoding", http.StatusBadRequest, err.Error())
 		return
 	}
-
-	res, err := h.services.Basket().Create(context.Background(), createBasket)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	res, err := h.services.Basket().Create(ctx, createBasket)
 	if err != nil {
 		handleResponse(c, "error is while creating basket", http.StatusInternalServerError, err.Error())
 		return
@@ -98,8 +101,9 @@ func (h Handler) GetBasketList(c *gin.Context) {
 	}
 
 	search = c.Query("search")
-
-	baskets, err := h.services.Basket().GetList(context.Background(), models.GetListRequest{
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	baskets, err := h.services.Basket().GetList(ctx, models.GetListRequest{
 		Page:   page,
 		Limit:  limit,
 		Search: search,
@@ -135,8 +139,9 @@ func (h Handler) UpdateBasket(c *gin.Context) {
 	}
 
 	updatedBasket.ID = uid
-
-	basket, err := h.services.Basket().Update(context.Background(), updatedBasket)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	basket, err := h.services.Basket().Update(ctx, updatedBasket)
 	if err != nil {
 		handleResponse(c, "error is while updating basket", http.StatusInternalServerError, err)
 		return
@@ -159,8 +164,9 @@ func (h Handler) UpdateBasket(c *gin.Context) {
 // @Failure      500  {object}  models.Response
 func (h Handler) DeleteBasket(c *gin.Context) {
 	uid := c.Param("id")
-
-	if err := h.services.Basket().Delete(context.Background(), models.PrimaryKey{ID: uid}); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	if err := h.services.Basket().Delete(ctx, models.PrimaryKey{ID: uid}); err != nil {
 		handleResponse(c, "error is while deleting basket", http.StatusInternalServerError, err)
 		return
 	}

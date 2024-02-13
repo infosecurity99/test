@@ -2,7 +2,7 @@ create table if not exists branches (
     id uuid primary key not null,
     name varchar(30),
     address text unique,
-    phone_number varchar(13) unique
+    phone_number varchar(30) unique
 );
 
 insert into branches
