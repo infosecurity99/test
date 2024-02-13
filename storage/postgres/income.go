@@ -46,8 +46,6 @@ func (i *incomeRepo) Create(ctx context.Context) (models.Income, error) {
 		extID = "I-0001"
 	}
 
-	fmt.Println("ex", extID)
-
 	query = `insert into incomes values ($1, $2, $3) returning id, external_id`
 
 	fmt.Println("ext id ", extID)

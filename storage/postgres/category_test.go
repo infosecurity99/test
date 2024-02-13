@@ -2,10 +2,11 @@ package postgres
 
 import (
 	"context"
-	"github.com/go-playground/assert/v2"
 	"test/api/models"
 	"test/config"
 	"testing"
+
+	"github.com/go-playground/assert/v2"
 )
 
 func TestCategoryRepo_Create(t *testing.T) {
@@ -78,11 +79,11 @@ func TestCategoryRepo_GetList(t *testing.T) {
 		t.Errorf("error while getting categoryResp error: %v", err)
 	}
 
-	if len(categoryResp.Category) != 7 {
+	if len(categoryResp.Category) != 24 {
 		t.Errorf("expected 16, but got: %d", len(categoryResp.Category))
 	}
 
-	assert.Equal(t, len(categoryResp.Category), 7)
+	assert.Equal(t, len(categoryResp.Category), 24)
 
 }
 

@@ -3,8 +3,9 @@ package postgres
 import (
 	"context"
 	"fmt"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"test/storage"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type dealerRepo struct {
@@ -30,3 +31,4 @@ func (d *dealerRepo) AddSum(ctx context.Context, totalSum int) error {
 	}
 	return nil
 }
+
