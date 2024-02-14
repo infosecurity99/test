@@ -3,40 +3,40 @@ package postgres
 import (
 	"context"
 	"test/config"
+	"test/pkg/logger"
 	"testing"
 	"time"
 )
 
 func TestStoreAddProfitAndWithdrawal(t *testing.T) {
-    cfg := config.Load()
-    pgStore, err := New(context.Background(), cfg)
-    if err != nil {
-        t.Fatalf("error while connection to db: %v", err)
-    }
+	cfg := config.Load()
+	pgStore, err := New(context.Background(), cfg, logger.New(""))
+	if err != nil {
+		t.Fatalf("error while connection to db: %v", err)
+	}
 
-    ctx := context.Background()
-    profit := float32(400.0)
-    branchID := "28288bf9-3ed1-4f4f-92f4-7ab3d5f2959a"
-    ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
-    defer cancel()
+	ctx := context.Background()
+	profit := float32(400.0)
+	branchID := "28288bf9-3ed1-4f4f-92f4-7ab3d5f2959a"
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
 
-    // Add profit to the store
-    if err := pgStore.Store().AddProfit(ctx, profit, branchID); err != nil {
-        t.Fatalf("AddProfit returned an unexpected error: %v", err)
-    }
+	// Add profit to the store
+	if err := pgStore.Store().AddProfit(ctx, profit, branchID); err != nil {
+		t.Fatalf("AddProfit returned an unexpected error: %v", err)
+	}
 
-    // Withdraw the profit from the store
-    if err := pgStore.Store().WithdrawalDeliveredSum(ctx, profit, branchID); err != nil {
-        t.Fatalf("WithdrawalDeliveredSum returned an unexpected error: %v", err)
-    }
+	// Withdraw the profit from the store
+	if err := pgStore.Store().WithdrawalDeliveredSum(ctx, profit, branchID); err != nil {
+		t.Fatalf("WithdrawalDeliveredSum returned an unexpected error: %v", err)
+	}
 
 }
-
 
 func TestStoreGetStoreBudget(t *testing.T) {
 
 	cfg := config.Load()
-	pgStore, err := New(context.Background(), cfg)
+	pgStore, err := New(context.Background(), cfg, logger.New(""))
 	if err != nil {
 		t.Fatalf("error while connecting to db: %v", err)
 	}
@@ -60,7 +60,7 @@ func TestStoreGetStoreBudget(t *testing.T) {
 func TestWithdrawalDeliveredSum(t *testing.T) {
 
 	cfg := config.Load()
-	pgStore, err := New(context.Background(), cfg)
+	pgStore, err := New(context.Background(), cfg, logger.New(""))
 	if err != nil {
 		t.Fatalf("error while connecting to db: %v", err)
 	}

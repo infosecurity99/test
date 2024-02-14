@@ -2,24 +2,27 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"test/api/models"
+	"test/pkg/logger"
 	"test/storage"
 )
 
 type incomeProductService struct {
 	storage storage.IStorage
+	log     logger.ILogger
 }
 
-func NewIncomeProductService(storage storage.IStorage) incomeProductService {
+func NewIncomeProductService(storage storage.IStorage, log logger.ILogger) incomeProductService {
 	return incomeProductService{
 		storage: storage,
+		log:     log,
 	}
 }
 
 func (i incomeProductService) CreateMultiple(ctx context.Context, request models.CreateIncomeProducts) error {
 	if err := i.storage.IncomeProduct().CreateMultiple(ctx, request); err != nil {
-		fmt.Println("error while creating multiple income products", err.Error())
+		i.log.Error("error while creating multiple income products", logger.Error(err))
+
 		return err
 	}
 
@@ -29,7 +32,8 @@ func (i incomeProductService) CreateMultiple(ctx context.Context, request models
 func (i incomeProductService) GetList(ctx context.Context, request models.GetListRequest) (models.IncomeProductsResponse, error) {
 	incomeProducts, err := i.storage.IncomeProduct().GetList(ctx, request)
 	if err != nil {
-		fmt.Println("error in service layer while getting list", err.Error())
+		i.log.Error("error in service layer while getting list", logger.Error(err))
+
 		return models.IncomeProductsResponse{}, err
 	}
 	return incomeProducts, nil
@@ -37,7 +41,8 @@ func (i incomeProductService) GetList(ctx context.Context, request models.GetLis
 
 func (i incomeProductService) UpdateMultiple(ctx context.Context, response models.UpdateIncomeProducts) error {
 	if err := i.storage.IncomeProduct().UpdateMultiple(ctx, response); err != nil {
-		fmt.Println("error in service layer while updating", err.Error())
+		i.log.Error("error in service layer while updating", logger.Error(err))
+
 		return err
 	}
 

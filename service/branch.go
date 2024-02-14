@@ -2,29 +2,35 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"test/api/models"
+	"test/pkg/logger"
 	"test/storage"
 )
 
 type branchService struct {
 	storage storage.IStorage
+	log     logger.ILogger
 }
 
-func NewBranchService(storage storage.IStorage) branchService {
-	return branchService{storage: storage}
+func NewBranchService(storage storage.IStorage, log logger.ILogger) branchService {
+	return branchService{
+		storage: storage,
+		log:     log,
+	}
 }
 
 func (b branchService) Create(ctx context.Context, branch models.CreateBranch) (models.Branch, error) {
 	id, err := b.storage.Branch().Create(ctx, branch)
 	if err != nil {
-		fmt.Println("error in service layer while creating branch", err.Error())
+		b.log.Error("error in service layer while creating branch", logger.Error(err))
+
 		return models.Branch{}, err
 	}
 
 	createdBranch, err := b.storage.Branch().GetByID(ctx, models.PrimaryKey{ID: id})
 	if err != nil {
-		fmt.Println("error in service layer while getting branch by id", err.Error())
+		b.log.Error("error in service layer while getting branch by id", logger.Error(err))
+
 		return models.Branch{}, err
 	}
 
@@ -34,7 +40,8 @@ func (b branchService) Create(ctx context.Context, branch models.CreateBranch) (
 func (b branchService) Get(ctx context.Context, id string) (models.Branch, error) {
 	branch, err := b.storage.Branch().GetByID(ctx, models.PrimaryKey{ID: id})
 	if err != nil {
-		fmt.Println("error in service layer while getting branch by id", err.Error())
+		b.log.Error("error in service layer while getting branch by id", logger.Error(err))
+
 		return models.Branch{}, err
 	}
 
@@ -44,7 +51,8 @@ func (b branchService) Get(ctx context.Context, id string) (models.Branch, error
 func (b branchService) GetList(ctx context.Context, request models.GetListRequest) (models.BranchResponse, error) {
 	branches, err := b.storage.Branch().GetList(ctx, request)
 	if err != nil {
-		fmt.Println("error in service layer while getting list", err.Error())
+		b.log.Error("error in service layer while getting branch by id", logger.Error(err))
+
 		return models.BranchResponse{}, err
 	}
 
@@ -54,13 +62,15 @@ func (b branchService) GetList(ctx context.Context, request models.GetListReques
 func (b branchService) Update(ctx context.Context, branch models.UpdateBranch) (models.Branch, error) {
 	id, err := b.storage.Branch().Update(ctx, branch)
 	if err != nil {
-		fmt.Println("error in service layer while updating branch", err.Error())
+		b.log.Error("error in service layer while updating branch", logger.Error(err))
+
 		return models.Branch{}, err
 	}
 
 	updatedBranch, err := b.storage.Branch().GetByID(ctx, models.PrimaryKey{ID: id})
 	if err != nil {
-		fmt.Println("error in service layer while getting  branch by id", err.Error())
+		b.log.Error("error in service layer while getting  branch by id", logger.Error(err))
+
 		return models.Branch{}, err
 	}
 

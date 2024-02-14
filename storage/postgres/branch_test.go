@@ -4,6 +4,7 @@ import (
 	"context"
 	"test/api/models"
 	"test/config"
+	"test/pkg/logger"
 	"testing"
 
 	"github.com/go-playground/assert/v2"
@@ -12,7 +13,7 @@ import (
 func TestBranchRepo_Create(t *testing.T) {
 	cfg := config.Load()
 
-	pgStore, err := New(context.Background(), cfg)
+	pgStore, err := New(context.Background(), cfg, logger.New(""))
 	if err != nil {
 		t.Errorf("error while connection to db error: %v", err)
 	}
@@ -41,7 +42,7 @@ func TestBranchRepo_Create(t *testing.T) {
 func TestBranchRepo_GetByID(t *testing.T) {
 	cfg := config.Load()
 
-	pgStore, err := New(context.Background(), cfg)
+	pgStore, err := New(context.Background(), cfg, logger.New(""))
 	if err != nil {
 		t.Fatalf("error while connecting to the database: %v", err)
 	}
@@ -76,7 +77,7 @@ func TestBranchRepo_GetByID(t *testing.T) {
 		} else if len(retrievedBranch.PhoneNumber) != 10 {
 			t.Errorf("expected phone length: 10, but got %d, branch ID: %s", len(retrievedBranch.PhoneNumber), retrievedBranch.ID)
 		}
-	
+
 	})
 }
 
@@ -84,7 +85,7 @@ func TestBranch_GetList(t *testing.T) {
 
 	cfg := config.Load()
 
-	pgStore, err := New(context.Background(), cfg)
+	pgStore, err := New(context.Background(), cfg, logger.New(""))
 	if err != nil {
 		t.Errorf("error while connecting to the database: %v", err)
 	}
@@ -111,7 +112,7 @@ func TestBranchRepo_Update(t *testing.T) {
 
 	cfg := config.Load()
 
-	pgStore, err := New(context.Background(), cfg)
+	pgStore, err := New(context.Background(), cfg, logger.New(""))
 	if err != nil {
 		t.Fatalf("error while connecting to the database: %v", err)
 	}
@@ -151,7 +152,7 @@ func TestBranchRepo_Delete(t *testing.T) {
 
 	cfg := config.Load()
 
-	pgStore, err := New(context.Background(), cfg)
+	pgStore, err := New(context.Background(), cfg, logger.New(""))
 	if err != nil {
 		t.Fatalf("error while connecting to the database: %v", err)
 	}

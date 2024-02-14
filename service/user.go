@@ -4,26 +4,31 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/jackc/pgx/v5"
 	"test/api/models"
 	"test/pkg/check"
+	"test/pkg/logger"
 	"test/storage"
+
+	"github.com/jackc/pgx/v5"
 )
 
 type userService struct {
 	storage storage.IStorage
+	log     logger.ILogger
 }
 
-func NewUserService(storage storage.IStorage) userService {
+func NewUserService(storage storage.IStorage, log logger.ILogger) userService {
 	return userService{
 		storage: storage,
+		log:     log,
 	}
 }
 
 func (u userService) Create(ctx context.Context, createUser models.CreateUser) (models.User, error) {
+	u.log.Info("User create service layer", logger.Any("createUser", createUser))
 	pKey, err := u.storage.User().Create(ctx, createUser)
 	if err != nil {
-		fmt.Println("ERROR in service layer while creating user", err.Error())
+		u.log.Error("error while creating user", logger.Error(err))
 		return models.User{}, err
 	}
 

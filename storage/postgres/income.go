@@ -3,22 +3,26 @@ package postgres
 import (
 	"errors"
 	"fmt"
+	"test/api/models"
+	"test/pkg/helper"
+	"test/pkg/logger"
+	"test/storage"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/net/context"
-	"test/api/models"
-	"test/pkg/helper"
-	"test/storage"
 )
 
 type incomeRepo struct {
-	db *pgxpool.Pool
+	db  *pgxpool.Pool
+	log logger.ILogger
 }
 
-func NewIncomeRepo(db *pgxpool.Pool) storage.IIncomeStorage {
+func NewIncomeRepo(db *pgxpool.Pool, log logger.ILogger) storage.IIncomeStorage {
 	return &incomeRepo{
-		db: db,
+		db:  db,
+		log: log,
 	}
 }
 
@@ -34,7 +38,8 @@ func (i *incomeRepo) Create(ctx context.Context) (models.Income, error) {
 		&extID,
 	); err != nil {
 		if !errors.Is(err, pgx.ErrNoRows) {
-			fmt.Println("error while getting ext id ", err.Error())
+			i.log.Error("error while getting ext id", logger.Error(err))
+
 			return models.Income{}, err
 		}
 		extID = "I"
@@ -49,11 +54,13 @@ func (i *incomeRepo) Create(ctx context.Context) (models.Income, error) {
 	query = `insert into incomes values ($1, $2, $3) returning id, external_id`
 
 	fmt.Println("ext id ", extID)
+	
 	if err := i.db.QueryRow(ctx, query, uuid.New(), extID, 0).Scan(
 		&income.ID,
 		&income.ExternalID,
 	); err != nil {
-		fmt.Println("error while creating income ", err.Error())
+		i.log.Error("error while creating income", logger.Error(err))
+
 		return models.Income{}, err
 	}
 
@@ -68,7 +75,8 @@ func (i *incomeRepo) GetByID(ctx context.Context, key models.PrimaryKey) (models
 		&income.ExternalID,
 		&income.TotalSum,
 	); err != nil {
-		fmt.Println("error is while selecting income by id", err.Error())
+		i.log.Error("error is while selecting income by id", logger.Error(err))
+
 		return models.Income{}, err
 	}
 	return income, nil
@@ -89,7 +97,8 @@ func (i *incomeRepo) GetList(ctx context.Context, request models.GetListRequest)
 	}
 
 	if err := i.db.QueryRow(ctx, countQuery).Scan(&count); err != nil {
-		fmt.Println("error is while scanning count", err.Error())
+		i.log.Error("error is while scanning count", logger.Error(err))
+
 		return models.IncomesResponse{}, err
 	}
 
@@ -100,7 +109,8 @@ func (i *incomeRepo) GetList(ctx context.Context, request models.GetListRequest)
 	query += ` LIMIT $1 OFFSET $2`
 	rows, err := i.db.Query(ctx, query, request.Limit, offset)
 	if err != nil {
-		fmt.Println("error is while selecting all", err.Error())
+		i.log.Error("error is while selecting all", logger.Error(err))
+
 		return models.IncomesResponse{}, err
 	}
 
@@ -111,7 +121,8 @@ func (i *incomeRepo) GetList(ctx context.Context, request models.GetListRequest)
 			&in.ExternalID,
 			&in.TotalSum,
 		); err != nil {
-			fmt.Println("error is while scanning all", err.Error())
+			i.log.Error("error is while scanning all", logger.Error(err))
+
 			return models.IncomesResponse{}, err
 		}
 		incomes = append(incomes, in)
@@ -127,9 +138,12 @@ func (i *incomeRepo) Delete(ctx context.Context, key models.PrimaryKey) error {
 	query := `update incomes set deleted_at = extract(epoch from current_timestamp) where id = $1`
 	if rowsAffected, err := i.db.Exec(ctx, query, key.ID); err != nil {
 		if r := rowsAffected.RowsAffected(); r == 0 {
-			fmt.Println("error is while rows affected", err.Error())
+			i.log.Error("error is while rows affected", logger.Error(err))
+
 			return err
 		}
+		i.log.Error("error is while rows affected", logger.Error(err))
+
 		fmt.Println("error is while delete income", err.Error())
 		return err
 	}

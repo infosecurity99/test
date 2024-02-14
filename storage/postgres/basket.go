@@ -4,18 +4,24 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"test/api/models"
+	"test/pkg/logger"
+	"test/storage"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"test/api/models"
-	"test/storage"
 )
 
 type basketRepo struct {
-	db *pgxpool.Pool
+	db  *pgxpool.Pool
+	log logger.ILogger
 }
 
-func NewBasketRepo(db *pgxpool.Pool) storage.IBasketStorage {
-	return &basketRepo{db: db}
+func NewBasketRepo(db *pgxpool.Pool, log logger.ILogger) storage.IBasketStorage {
+	return &basketRepo{
+		db:  db,
+		log: log,
+	}
 }
 
 func (b *basketRepo) Create(ctx context.Context, basket models.CreateBasket) (string, error) {
@@ -24,10 +30,12 @@ func (b *basketRepo) Create(ctx context.Context, basket models.CreateBasket) (st
 	query := `insert into baskets(id, customer_id, total_sum) values($1, $2, $3)`
 	if rowsAffected, err := b.db.Exec(ctx, query, id, basket.CustomerID, basket.TotalSum); err != nil {
 		if r := rowsAffected.RowsAffected(); r == 0 {
-			fmt.Println("error is in rows affected", err.Error())
+			b.log.Error("error is in rows affected", logger.Error(err))
+
 			return "", err
 		}
-		fmt.Println("error is while inserting basket data", err.Error())
+		b.log.Error("error is while inserting basket data", logger.Error(err))
+
 		return "", err
 	}
 
@@ -45,7 +53,8 @@ func (b *basketRepo) GetByID(ctx context.Context, key models.PrimaryKey) (models
 		&createdAt,
 		&updatedAt,
 	); err != nil {
-		fmt.Println("error is while selecting basket", err.Error())
+		b.log.Error("error is while selecting basket", logger.Error(err))
+
 		return models.Basket{}, err
 	}
 
@@ -77,7 +86,8 @@ func (b *basketRepo) GetList(ctx context.Context, req models.GetListRequest) (mo
 		countQuery += fmt.Sprintf(` and CAST(total_sum AS TEXT) ilike '%%%s%%'`, search)
 	}
 	if err := b.db.QueryRow(ctx, countQuery).Scan(&count); err != nil {
-		fmt.Println("error is while selecting count", err.Error())
+		b.log.Error("error is while selecting count", logger.Error(err))
+
 		return models.BasketResponse{}, err
 	}
 
@@ -90,14 +100,16 @@ func (b *basketRepo) GetList(ctx context.Context, req models.GetListRequest) (mo
 	query += ` order by created_at desc LIMIT $1 OFFSET $2`
 	rows, err := b.db.Query(ctx, query, req.Limit, offset)
 	if err != nil {
-		fmt.Println("error is while selecting baskets", err.Error())
+		b.log.Error("error is while selecting baskets", logger.Error(err))
+
 		return models.BasketResponse{}, err
 	}
 
 	for rows.Next() {
 		basket := models.Basket{}
 		if err = rows.Scan(&basket.ID, &basket.CustomerID, &basket.TotalSum, &createdAt, &updatedAt); err != nil {
-			fmt.Println("error is while scanning data", err.Error())
+			b.log.Error("error is while scanning data", logger.Error(err))
+
 			return models.BasketResponse{}, err
 		}
 
@@ -128,7 +140,8 @@ func (b *basketRepo) Update(ctx context.Context, basket models.UpdateBasket) (st
 		&basket.ID,
 	); err != nil {
 		if r := rowsAffected.RowsAffected(); r == 0 {
-			fmt.Println("error is in rows affected", err.Error())
+			b.log.Error("error is in rows affected", logger.Error(err))
+
 			return "", err
 		}
 		return "", err
@@ -136,7 +149,8 @@ func (b *basketRepo) Update(ctx context.Context, basket models.UpdateBasket) (st
 
 	if err := b.db.QueryRow(ctx, `select id, customer_id, total_sum from baskets where id = $1`,
 		basket.ID).Scan(&bas.ID, &bas.CustomerID, &bas.TotalSum); err != nil {
-		fmt.Println("error is while selecting ", err.Error())
+			b.log.Error("error is while selecting", logger.Error(err))
+
 		return "", err
 	}
 	return bas.ID, nil

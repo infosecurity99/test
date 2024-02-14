@@ -3,19 +3,25 @@ package postgres
 import (
 	"context"
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"strings"
 	"test/api/models"
+	"test/pkg/logger"
 	"test/storage"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type incomeProductRepo struct {
-	db *pgxpool.Pool
+	db  *pgxpool.Pool
+	log logger.ILogger
 }
 
-func NewIncomeProductRepo(db *pgxpool.Pool) storage.IIncomeProductStorage {
-	return &incomeProductRepo{db: db}
+func NewIncomeProductRepo(db *pgxpool.Pool, log logger.ILogger) storage.IIncomeProductStorage {
+	return &incomeProductRepo{
+		db:  db,
+		log: log,
+	}
 }
 
 func (i *incomeProductRepo) CreateMultiple(ctx context.Context, request models.CreateIncomeProducts) error {
@@ -31,7 +37,8 @@ func (i *incomeProductRepo) CreateMultiple(ctx context.Context, request models.C
 	query = query[:len(query)-2]
 
 	if _, err := i.db.Exec(ctx, query); err != nil {
-		fmt.Println("error while inserting income products ", err.Error())
+		i.log.Error("error while inserting income products", logger.Error(err))
+
 		return err
 	}
 
@@ -52,7 +59,8 @@ func (i *incomeProductRepo) GetList(ctx context.Context, request models.GetListR
 		countQuery += fmt.Sprintf(` and income_id = '%s'`, request.Search)
 	}
 	if err := i.db.QueryRow(ctx, countQuery).Scan(&count); err != nil {
-		fmt.Println("error is while scanning count from income products", err.Error())
+		i.log.Error("error is while scanning count from income products", logger.Error(err))
+
 		return models.IncomeProductsResponse{}, err
 	}
 
@@ -63,13 +71,15 @@ func (i *incomeProductRepo) GetList(ctx context.Context, request models.GetListR
 	query += ` LIMIT $1 OFFSET $2`
 	rows, err := i.db.Query(ctx, query, request.Limit, offset)
 	if err != nil {
-		fmt.Println("error is while selecting all from income products", err.Error())
+		i.log.Error("error is while selecting all from income products", logger.Error(err))
+
 		return models.IncomeProductsResponse{}, err
 	}
 	for rows.Next() {
 		inp := models.IncomeProduct{}
 		if err = rows.Scan(&inp.ID, &inp.IncomeID, &inp.ProductID, &inp.Quantity, &inp.Price); err != nil {
-			fmt.Println("error is while scanning all from income products", err.Error())
+			i.log.Error("error is while scanning all from income products", logger.Error(err))
+
 			return models.IncomeProductsResponse{}, err
 		}
 		incomeProducts = append(incomeProducts, inp)
@@ -93,10 +103,12 @@ func (i *incomeProductRepo) UpdateMultiple(ctx context.Context, response models.
 	finalQuery := fmt.Sprintf(query, strings.Join(updateStatements, "\n"))
 	if rowsAffected, err := i.db.Exec(ctx, finalQuery); err != nil {
 		if r := rowsAffected.RowsAffected(); r == 0 {
-			fmt.Println("error is while rows affected", err.Error())
+			i.log.Error("error is while rows affected", logger.Error(err))
+
 			return err
 		}
-		fmt.Println("error is while updating income products", err.Error())
+		i.log.Error("error is while updating income products", logger.Error(err))
+
 		return err
 	}
 
@@ -114,10 +126,12 @@ func (i *incomeProductRepo) DeleteMultiple(ctx context.Context, response models.
 	finalQuery := fmt.Sprintf(query, strings.Join(deleteStatements, "\n"))
 	if rowsAffected, err := i.db.Exec(ctx, finalQuery); err != nil {
 		if r := rowsAffected.RowsAffected(); r == 0 {
-			fmt.Println("error is while rows affected", err.Error())
+			i.log.Error("error is while rows affected", logger.Error(err))
+
 			return err
 		}
-		fmt.Println("error is while deleting income products", err.Error())
+		i.log.Error("error is while deleting income products", logger.Error(err))
+
 		return err
 	}
 	return nil

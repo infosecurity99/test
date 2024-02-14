@@ -2,29 +2,35 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"test/api/models"
+	"test/pkg/logger"
 	"test/storage"
 )
 
 type basketProductService struct {
 	storage storage.IStorage
+	log     logger.ILogger
 }
 
-func NewBasketProductService(storage storage.IStorage) basketProductService {
-	return basketProductService{storage: storage}
+func NewBasketProductService(storage storage.IStorage, log logger.ILogger) basketProductService {
+	return basketProductService{
+		storage: storage,
+		log:     log,
+	}
 }
 
 func (b basketProductService) Create(ctx context.Context, createProduct models.CreateBasketProduct) (models.BasketProduct, error) {
 	id, err := b.storage.BasketProduct().Create(ctx, createProduct)
 	if err != nil {
-		fmt.Println("error in service layer while creating basket product", err.Error())
+		b.log.Error("error in service layer while creating basket product", logger.Error(err))
+
 		return models.BasketProduct{}, err
 	}
 
 	createdProduct, err := b.storage.BasketProduct().GetByID(ctx, models.PrimaryKey{ID: id})
 	if err != nil {
-		fmt.Println("error in service layer is while getting by id", err.Error())
+		b.log.Error("error in service layer is while getting by id", logger.Error(err))
+
 		return models.BasketProduct{}, err
 	}
 
@@ -34,7 +40,8 @@ func (b basketProductService) Create(ctx context.Context, createProduct models.C
 func (b basketProductService) Get(ctx context.Context, key models.PrimaryKey) (models.BasketProduct, error) {
 	basketProduct, err := b.storage.BasketProduct().GetByID(ctx, key)
 	if err != nil {
-		fmt.Println("error in service layer is while getting basket product", err.Error())
+		b.log.Error("error in service layer is while getting basket product", logger.Error(err))
+
 		return models.BasketProduct{}, err
 	}
 
@@ -44,7 +51,8 @@ func (b basketProductService) Get(ctx context.Context, key models.PrimaryKey) (m
 func (b basketProductService) GetList(ctx context.Context, request models.GetListRequest) (models.BasketProductResponse, error) {
 	basketProducts, err := b.storage.BasketProduct().GetList(ctx, request)
 	if err != nil {
-		fmt.Println("error in service layer while getting list", err.Error())
+		b.log.Error("error in service layer while getting list", logger.Error(err))
+
 		return models.BasketProductResponse{}, err
 	}
 
@@ -54,13 +62,15 @@ func (b basketProductService) GetList(ctx context.Context, request models.GetLis
 func (b basketProductService) Update(ctx context.Context, product models.UpdateBasketProduct) (models.BasketProduct, error) {
 	id, err := b.storage.BasketProduct().Update(ctx, product)
 	if err != nil {
-		fmt.Println("error in service layer while updating", err.Error())
+		b.log.Error("error in service layer while getting list", logger.Error(err))
+
 		return models.BasketProduct{}, err
 	}
 
 	updatedBasketProduct, err := b.storage.BasketProduct().GetByID(ctx, models.PrimaryKey{ID: id})
 	if err != nil {
-		fmt.Println("error in service layer while getting by id", err.Error())
+		b.log.Error("error in service layer while getting by id", logger.Error(err))
+
 		return models.BasketProduct{}, err
 	}
 

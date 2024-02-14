@@ -4,6 +4,7 @@ import (
 	"context"
 	"test/api/models"
 	"test/config"
+	"test/pkg/logger"
 	"testing"
 
 	"github.com/go-playground/assert/v2"
@@ -12,7 +13,7 @@ import (
 func TestProductRepo_Create(t *testing.T) {
 	cfg := config.Load()
 
-	pgStore, err := New(context.Background(), cfg)
+	pgStore, err := New(context.Background(), cfg, logger.New(""))
 	if err != nil {
 		t.Errorf("ERRROR  WHILE CONNECTING TO DB ERROR %v", err)
 	}
@@ -47,7 +48,7 @@ func TestProductRepo_Create(t *testing.T) {
 func TestProductRepo_GetById(t *testing.T) {
 	cfg := config.Load()
 
-	pgStore, err := New(context.Background(), cfg)
+	pgStore, err := New(context.Background(), cfg, logger.New(""))
 	if err != nil {
 		t.Fatalf("Error while connecting to database: %v", err)
 	}
@@ -104,7 +105,7 @@ func TestProductRepo_GetById(t *testing.T) {
 func TestProductRepo_GetList(t *testing.T) {
 	cfg := config.Load()
 
-	pgStore, err := New(context.Background(), cfg)
+	pgStore, err := New(context.Background(), cfg, logger.New(""))
 	if err != nil {
 		t.Errorf("error while  connectiong  to db error %v", err)
 	}
@@ -126,7 +127,7 @@ func TestProductRepo_GetList(t *testing.T) {
 func TestProductRepo_Update(t *testing.T) {
 	cfg := config.Load()
 
-	pgStore, err := New(context.Background(), cfg)
+	pgStore, err := New(context.Background(), cfg, logger.New(""))
 	if err != nil {
 		t.Errorf("erroring while  db connect problamem %v", err)
 	}
@@ -171,7 +172,7 @@ func TestProductRepo_Update(t *testing.T) {
 func TestProductRepo_Delete(t *testing.T) {
 	cfg := config.Load()
 
-	pgStore, err := New(context.Background(), cfg)
+	pgStore, err := New(context.Background(), cfg, logger.New(""))
 	if err != nil {
 		t.Fatalf("Error while connecting to database: %v", err)
 	}

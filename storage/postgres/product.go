@@ -4,21 +4,27 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
+	"test/api/models"
+	"test/pkg/logger"
+	"test/storage"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/lib/pq"
 	_ "github.com/lib/pq"
-	"strings"
-	"test/api/models"
-	"test/storage"
 )
 
 type productRepo struct {
-	db *pgxpool.Pool
+	db  *pgxpool.Pool
+	log logger.ILogger
 }
 
-func NewProductRepo(db *pgxpool.Pool) storage.IProductStorage {
-	return &productRepo{db: db}
+func NewProductRepo(db *pgxpool.Pool, log logger.ILogger) storage.IProductStorage {
+	return &productRepo{
+		db:  db,
+		log: log,
+	}
 }
 
 func (p *productRepo) Create(ctx context.Context, product models.CreateProduct) (string, error) {
@@ -35,10 +41,12 @@ func (p *productRepo) Create(ctx context.Context, product models.CreateProduct) 
 		product.CategoryID,
 		product.BranchID); err != nil {
 		if r := rowsAffected.RowsAffected(); r == 0 {
-			fmt.Println("error is in rows affected", err.Error())
+			p.log.Error("rror is in rows affected", logger.Error(err))
+
 			return "", err
 		}
-		fmt.Println("error is while inserting product", err.Error())
+		p.log.Error("error while inserting product", logger.Error(err))
+
 		return "", err
 	}
 
@@ -60,7 +68,7 @@ func (p *productRepo) GetByID(ctx context.Context, key models.PrimaryKey) (model
 		&product.BranchID,
 		&createdAt,
 		&updatedAt); err != nil {
-		fmt.Println("error is while selecting product by id", err.Error())
+		p.log.Error("error is while selecting product by id", logger.Error(err))
 		return models.Product{}, err
 	}
 
@@ -109,7 +117,8 @@ func (p *productRepo) GetList(ctx context.Context, request models.GetListRequest
 
 	rows, err := p.db.Query(ctx, query, request.Limit, offset)
 	if err != nil {
-		fmt.Println("error is while selecting products", err.Error())
+		p.log.Error("error is while selecting product", logger.Error(err))
+
 		return models.ProductResponse{}, err
 	}
 
@@ -125,7 +134,8 @@ func (p *productRepo) GetList(ctx context.Context, request models.GetListRequest
 			&product.BranchID,
 			&createdAt,
 			&updatedAt); err != nil {
-			fmt.Println("error is while scanning products", err.Error())
+			p.log.Error("error is while sacaning product", logger.Error(err))
+
 			return models.ProductResponse{}, err
 		}
 		if createdAt.Valid {
@@ -154,7 +164,8 @@ func (p *productRepo) Update(ctx context.Context, product models.UpdateProduct) 
 		&product.Quantity,
 		&product.CategoryID,
 		&product.ID); err != nil {
-		fmt.Println("error is while updating product", err.Error())
+		p.log.Error("error is while update product", logger.Error(err))
+
 		return "", err
 	}
 
@@ -169,7 +180,9 @@ func (p *productRepo) Delete(ctx context.Context, key models.PrimaryKey) error {
 			fmt.Println("error is in rows affected", err.Error())
 			return err
 		}
-		fmt.Println("error is while deleting product", err.Error())
+
+		p.log.Error("error is while delete product", logger.Error(err))
+
 		return err
 	}
 	return nil
@@ -213,7 +226,8 @@ func (p *productRepo) Search(ctx context.Context, customerProductIDs map[string]
 			&originalPrice,
 			&branchID,
 		); err != nil {
-			fmt.Println("Error while scanning rows one by one", err.Error())
+			p.log.Error("Error while scanning rows one by one", logger.Error(err))
+
 			return models.ProductSell{}, err
 		}
 
@@ -256,7 +270,8 @@ func (p *productRepo) TakeProducts(ctx context.Context, products map[string]int)
 	finalQuery := fmt.Sprintf(query, strings.Join(updateStatements, "\n"))
 
 	if _, err := p.db.Exec(ctx, finalQuery); err != nil {
-		fmt.Println("Error while updating product quantity", err.Error())
+		p.log.Error("Error while updating product quantity", logger.Error(err))
+
 		return err
 	}
 	return nil
@@ -284,10 +299,12 @@ func (p *productRepo) AddDeliveredProducts(ctx context.Context, products models.
 
 		if rowsAffected, err := p.db.Exec(ctx, finalQuery); err != nil {
 			if r := rowsAffected.RowsAffected(); r == 0 {
-				fmt.Println("error is while rows affected", err.Error())
+				p.log.Error("error is while rows affected", logger.Error(err))
+
 				return err
 			}
-			fmt.Println("error is while updating quantity of delivered products", err.Error())
+			p.log.Error("error is while updating quantity of delivered products", logger.Error(err))
+
 			return err
 		}
 	}
@@ -305,7 +322,8 @@ func (p *productRepo) GetListByIDs(ctx context.Context, productIDs []string) (mo
 
 	rows, err := p.db.Query(ctx, query, pq.Array(productIDs))
 	if err != nil {
-		fmt.Println("Error while getting products by product ids", err.Error())
+		p.log.Error("Error while getting products by product ids", logger.Error(err))
+
 		return models.ProductResponse{}, err
 	}
 
@@ -317,7 +335,9 @@ func (p *productRepo) GetListByIDs(ctx context.Context, productIDs []string) (mo
 			&product.Name,
 			&product.Price,
 		); err != nil {
-			fmt.Println("Error while scanning rows one by one", err.Error())
+
+			p.log.Error("Error while scanning rows one by one", logger.Error(err))
+
 			return models.ProductResponse{}, err
 		}
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"test/api/models"
 	"test/config"
+	"test/pkg/logger"
 	"testing"
 
 	"github.com/go-playground/assert/v2"
@@ -12,7 +13,7 @@ import (
 func TestBaketRepo_Create(t *testing.T) {
 	cfg := config.Load()
 
-	pgStore, err := New(context.Background(), cfg)
+	pgStore, err := New(context.Background(), cfg, logger.New(""))
 	if err != nil {
 		t.Errorf("errro  whiling %v", err)
 	}
@@ -38,7 +39,7 @@ func TestBaketRepo_Create(t *testing.T) {
 func TestBasketRepo_GetById(t *testing.T) {
 	cfg := config.Load()
 
-	pgStore, err := New(context.Background(), cfg)
+	pgStore, err := New(context.Background(), cfg, logger.New(""))
 	if err != nil {
 		t.Errorf("errro  whiling %v", err)
 	}
@@ -72,7 +73,7 @@ func TestBasketRepo_GetById(t *testing.T) {
 func TestBaksetRepo_GetList(t *testing.T) {
 	cfg := config.Load()
 
-	pgStore, err := New(context.Background(), cfg)
+	pgStore, err := New(context.Background(), cfg, logger.New(""))
 	if err != nil {
 		t.Errorf("errro  whiling %v", err)
 	}
@@ -96,7 +97,7 @@ func TestBaksetRepo_GetList(t *testing.T) {
 func TestBaksetRepo_Update(t *testing.T) {
 	cfg := config.Load()
 
-	pgStore, err := New(context.Background(), cfg)
+	pgStore, err := New(context.Background(), cfg, logger.New(""))
 	if err != nil {
 		t.Errorf("errro  whiling %v", err)
 	}
@@ -132,7 +133,7 @@ func TestBaksetRepo_Update(t *testing.T) {
 func Test_Delete(t *testing.T) {
 	cfg := config.Load()
 
-	pgStore, err := New(context.Background(), cfg)
+	pgStore, err := New(context.Background(), cfg, logger.New(""))
 	if err != nil {
 		t.Errorf("errro  whiling %v", err)
 	}

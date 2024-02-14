@@ -3,9 +3,11 @@ package postgres
 import (
 	"context"
 	"fmt"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"test/config"
+	"test/pkg/logger"
 	"test/storage"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	_ "github.com/golang-migrate/migrate/v4/database"          //database is needed for migration
 	_ "github.com/golang-migrate/migrate/v4/database/postgres" //postgres is used for database
@@ -15,9 +17,10 @@ import (
 
 type Store struct {
 	pool *pgxpool.Pool
+	log  logger.ILogger
 }
 
-func New(ctx context.Context, cfg config.Config) (storage.IStorage, error) {
+func New(ctx context.Context, cfg config.Config, log logger.ILogger) (storage.IStorage, error) {
 	url := fmt.Sprintf(
 		`postgres://%s:%s@%s:%s/%s?sslmode=disable`,
 		cfg.PostgresUser,
@@ -29,7 +32,7 @@ func New(ctx context.Context, cfg config.Config) (storage.IStorage, error) {
 
 	poolConfig, err := pgxpool.ParseConfig(url)
 	if err != nil {
-		fmt.Println("error while parsing config", err.Error())
+		log.Error("error while parsing config", logger.Error(err))
 		return nil, err
 	}
 
@@ -37,65 +40,64 @@ func New(ctx context.Context, cfg config.Config) (storage.IStorage, error) {
 
 	pool, err := pgxpool.NewWithConfig(ctx, poolConfig)
 	if err != nil {
-		fmt.Println("error while connecting to db", err.Error())
+		log.Error("error while connecting to db", logger.Error(err))
 		return nil, err
 	}
+	/*
+		// migration
+		m, err := migrate.New("file://migrations/postgres/", url)
+		if err != nil {
+			log.Error("error while migrating", logger.Error(err))
+			return nil, err
+		}
 
-	// migration
-	//m, err := migrate.New("file://migrations/postgres/", url)
-	//if err != nil {
-	//	fmt.Println("error while migrating", err.Error())
-	//	return nil, err
-	//}
-	//
-	//if err = m.Up(); err != nil {
-	//	if !strings.Contains(err.Error(), "no change") {
-	//		version, dirty, err := m.Version()
-	//		if err != nil {
-	//			fmt.Println("err in checking version and dirty", err.Error())
-	//			return nil, err
-	//		}
-	//
-	//		if dirty {
-	//			version--
-	//			if err = m.Force(int(version)); err != nil {
-	//				fmt.Println("ERR in making force", err.Error())
-	//				return nil, err
-	//			}
-	//		}
-	//		fmt.Println("ERROR in migrating", err.Error())
-	//		return nil, err
-	//	}
-	//}
+		if err = m.Up(); err != nil {
+			if !strings.Contains(err.Error(), "no change") {
+				version, dirty, err := m.Version()
+				if err != nil {
+					log.Error("err in checking version and dirty", logger.Error(err))
+					return nil, err
+				}
 
+				if dirty {
+					version--
+					if err = m.Force(int(version)); err != nil {
+						log.Error("ERR in making force", logger.Error(err))
+						return nil, err
+					}
+				}
+				return nil, err
+			}
+		}
+	*/
 	return Store{
 		pool: pool,
+		log:  log,
 	}, nil
 }
-
 func (s Store) Close() {
 	s.pool.Close()
 }
 
 func (s Store) User() storage.IUserStorage {
-	return NewUserRepo(s.pool)
+	return NewUserRepo(s.pool, s.log)
 }
 
 func (s Store) Category() storage.ICategoryStorage {
-	return NewCategoryRepo(s.pool)
+	return NewCategoryRepo(s.pool, s.log)
 }
 
 func (s Store) Product() storage.IProductStorage {
-	return NewProductRepo(s.pool)
+	return NewProductRepo(s.pool, s.log)
 }
 
 func (s Store) Basket() storage.IBasketStorage {
-	return NewBasketRepo(s.pool)
+	return NewBasketRepo(s.pool, s.log)
 
 }
 
 func (s Store) BasketProduct() storage.IBasketProductStorage {
-	return NewBasketProductRepo(s.pool)
+	return NewBasketProductRepo(s.pool, s.log)
 }
 
 func (s Store) Store() storage.IStoreStorage {
@@ -103,17 +105,17 @@ func (s Store) Store() storage.IStoreStorage {
 }
 
 func (s Store) Branch() storage.IBranchStorage {
-	return NewBranchRepo(s.pool)
+	return NewBranchRepo(s.pool, s.log)
 }
 
 func (s Store) Dealer() storage.IDealerStorage {
-	return NewDealerRepo(s.pool)
+	return NewDealerRepo(s.pool, s.log)
 }
 
 func (s Store) Income() storage.IIncomeStorage {
-	return NewIncomeRepo(s.pool)
+	return NewIncomeRepo(s.pool, s.log)
 }
 
 func (s Store) IncomeProduct() storage.IIncomeProductStorage {
-	return NewIncomeProductRepo(s.pool)
+	return NewIncomeProductRepo(s.pool, s.log)
 }
